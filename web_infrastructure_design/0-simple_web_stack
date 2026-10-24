@@ -1,0 +1,57 @@
+# Simple Web Stack
+
+![Simple Web Stack Diagram](https://i.imgur.com/yYqCy5R.png)
+
+## Description
+This infrastructure hosts a personal website reachable via `www.foobar.com` on a single server running a LAMP-like stack.
+
+### Workflow
+1. A user enters `www.foobar.com` into their web browser.
+2. The browser contacts the DNS server to resolve `www.foobar.com`.
+3. The DNS server returns the IP address `8.8.8.8`.
+4. The browser establishes an HTTP connection via TCP/IP to the server at IP `8.8.8.8` on port 80.
+5. The Nginx web server receives the request:
+   - Static files (HTML, CSS, JS, images) are served directly from the application files.
+   - Dynamic requests are forwarded to the application server.
+6. The application server executes the backend code and queries the MySQL database as needed.
+7. The MySQL database retrieves the requested data and returns it to the application server.
+8. The application server compiles the dynamic response and returns it to Nginx.
+9. Nginx sends the final HTTP response over TCP/IP back to the user's browser.
+
+---
+
+## Specifics
+
+* **What is a server?**
+  A server is a physical or virtual machine (or software program) designed to provide services, functionality, or resources to other computers or programs called "clients".
+
+* **What is the role of the domain name?**
+  A domain name provides a human-readable, user-friendly address (e.g., `foobar.com`) to locate internet resources, replacing numeric IP addresses that are difficult to remember.
+
+* **What type of DNS record `www` is in `www.foobar.com`?**
+  It is typically configured as a **CNAME record** pointing `www.foobar.com` to the apex domain `foobar.com` (which points to `8.8.8.8`), or an **A record** mapping directly to `8.8.8.8`.
+
+* **What is the role of the web server (Nginx)?**
+  It handles incoming HTTP/HTTPS requests from clients, directly serves static assets, and acts as a reverse proxy by forwarding dynamic requests to the application server.
+
+* **What is the role of the application server?**
+  It executes the dynamic application code and business logic, processes incoming parameters, communicates with the database, and builds dynamic content to send back to the web server.
+
+* **What is the role of the database (MySQL)?**
+  It stores, organizes, and manages persistent and structured application data, providing fast querying and data retrieval capabilities.
+
+* **What is the server using to communicate with the computer of the user requesting the website?**
+  It uses the **TCP/IP** protocol suite over the internet, transmitting application data specifically through the **HTTP** protocol (port 80) or **HTTPS** (port 443).
+
+---
+
+## Issues with this infrastructure
+
+* **Single Point of Failure (SPOF):**
+  Since all core components (Nginx, application server, and MySQL database) reside on one server, any hardware failure, network outage, or OS crash results in total website downtime.
+
+* **Downtime when maintenance is needed:**
+  Performing system updates, restarting Nginx/MySQL, or deploying new code updates requires taking services offline temporarily, causing service interruption for visitors.
+
+* **Cannot scale if there is too much incoming traffic:**
+  A single server can only scale vertically (by upgrading CPU/RAM), which has hardware and cost boundaries. Spikes in web traffic can exhaust available resources, causing the server to freeze or crash.
