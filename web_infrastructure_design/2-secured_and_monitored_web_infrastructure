@@ -1,7 +1,9 @@
 # Secured and Monitored Web Infrastructure
 
 ## Diagram
-![Secured and Monitored Web Infrastructure Diagram](YOUR_IMGUR_URL_HERE)
+![Secured and Monitored Web Infrastructure Diagram](https://i.imgur.com/p7g6Lpr.png)
+
+*Direct Link:* [View Diagram on Imgur](https://imgur.com/p7g6Lpr)
 
 ## Description
 This infrastructure builds upon the distributed setup by securing incoming traffic using HTTPS/SSL, protecting individual servers with firewalls, and implementing end-to-end performance and health monitoring using monitoring agents on each server.
