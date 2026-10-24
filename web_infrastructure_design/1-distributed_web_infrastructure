@@ -1,0 +1,52 @@
+# Distributed Web Infrastructure
+
+## Diagram
+![Distributed Web Infrastructure Diagram](https://i.imgur.com/voyrr3D.png)
+
+*Direct Link:* [View Diagram on Imgur](https://imgur.com/voyrr3D)
+
+## Description
+This infrastructure distributes incoming web traffic across multiple servers using an HAProxy load balancer to handle larger volumes of visitors, improve redundancy, and separate database operations into a Primary-Replica cluster.
+
+---
+
+## Specifics
+
+### Why Every Additional Element is Added:
+* **Load Balancer (HAProxy):**  
+  Added to receive all incoming traffic and distribute it across the backend web servers. This prevents any single web server from being overwhelmed, enables horizontal scaling, and provides redundancy (if one server fails, HAProxy routes requests to the healthy one).
+* **Second Server (Web/App/DB):**  
+  Added to remove the single server bottleneck, allowing the infrastructure to serve double the concurrent user capacity and provide high availability.
+* **Database Primary-Replica Setup:**  
+  Added to separate write and read workloads. This boosts overall database read performance and ensures database redundancy.
+
+### Load Balancer Distribution Algorithm:
+* **Round Robin:**  
+  The load balancer is configured with the **Round Robin** algorithm. It works by distributing incoming client requests sequentially across the list of backend servers in turns (e.g., Request 1 -> Server 2, Request 2 -> Server 3, Request 3 -> Server 2, etc.). It assumes all backend servers possess equivalent processing capacity.
+
+### Load Balancer Setup (Active-Active vs. Active-Passive):
+* **Current Setup:**  
+  The load balancer enables an **Active-Active** setup for the backend web/application servers because both backend servers are actively receiving and processing client traffic simultaneously.
+* **Difference between Active-Active and Active-Passive:**  
+  * **Active-Active:** All servers in the cluster actively handle traffic concurrently, distributing load and utilizing available hardware fully.
+  * **Active-Passive:** One server actively handles all traffic while the second remains on standby (idle). The passive server only takes over if the primary/active server fails.
+
+### Database Primary-Replica (Master-Slave) Cluster:
+* **How it works:**  
+  The cluster consists of one designated Primary node and one (or more) Replica nodes. All write transactions (INSERT, UPDATE, DELETE) are executed exclusively on the Primary node. The Primary logs these changes into a binary log, which the Replica reads and applies to synchronize its own dataset.
+* **Primary vs. Replica regarding the application:**  
+  * **Primary Node:** Handles both read and write operations from the application. It is the single source of truth for updates.
+  * **Replica Node:** Handles **read-only** queries (SELECT statements) to offload read strain from the Primary. The application never sends write requests to the Replica.
+
+---
+
+## Infrastructure Issues
+
+* **Where are the Single Points of Failure (SPOF)?**  
+  * **The Load Balancer (HAProxy):** There is only one load balancer. If Server 1 crashes, the entire website goes down because no traffic can reach the backend servers.
+  * **The Primary Database Node:** If the Primary MySQL database crashes, the application can no longer accept write operations (e.g., user registrations, updates).
+* **Security Issues:**  
+  * **No Firewall:** There is no software or network firewall (e.g., UFW, iptables) configured. Ports and internal services (such as MySQL port 3306) are directly exposed to the internet.
+  * **No HTTPS:** The infrastructure only runs unencrypted HTTP traffic. All communications, credentials, and cookies are transmitted in plain text, making them vulnerable to Man-in-the-Middle (MITM) attacks and packet sniffing.
+* **No Monitoring:**  
+  There is no monitoring or alerting tool installed (such as Nagios, Prometheus, or Datadog). System administrators cannot track CPU/RAM utilization, disk space, or network spikes, and will not be notified if a server or service crashes.
