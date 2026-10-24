@@ -1,0 +1,35 @@
+# Scale Up Web Infrastructure
+
+## Diagram
+![Scale Up Web Infrastructure Diagram](https://i.imgur.com/W500Cum.png)
+
+*Direct Link:* [View Diagram on Imgur](https://imgur.com/W500Cum)
+
+## Description
+This infrastructure represents a fully decoupled, multi-tiered architecture designed to eliminate single points of failure at the edge, maximize performance through horizontal scaling, and ensure dedicated resource allocation by isolating web servers, application servers, and databases onto dedicated individual hosts.
+
+---
+
+## Specifics
+
+### Why Every Additional Element is Added:
+
+* **Second Load Balancer (HAProxy Cluster with Keepalived / VRRP):**  
+  Added to eliminate the load balancer as a Single Point of Failure (SPOF). Configured with a floating/virtual IP address (Active-Passive or Active-Active with DNS/BGP routing), the secondary load balancer monitors the primary via heartbeats and takes over traffic immediately if the active load balancer fails.
+
+* **Decoupled Web Server Tier (Nginx):**  
+  Placed on its own dedicated server to serve static assets (images, CSS, JS) at high speed and manage client TLS/SSL connections without consuming CPU and memory cycles required by backend logic.
+
+* **Decoupled Application Server Tier:**  
+  Separated into dedicated machines to execute business logic, dynamic code, and framework processing in isolation. Splitting application servers across distinct nodes enables horizontal auto-scaling based strictly on CPU/memory processing demand.
+
+* **Decoupled Database Tier (MySQL Primary & Replica):**  
+  Moved to dedicated standalone hosts optimized for high I/O throughput and substantial memory caching. Isolating MySQL guarantees that intense database read/write queries and index allocations do not compete with application runtime execution or web server connection handling.
+
+---
+
+## Benefits of Component Separation
+
+* **No Resource Contention:** CPU-heavy backend computations or memory-intensive database queries cannot exhaust resources needed by the web server to accept incoming connections.
+* **Targeted Scaling:** Individual tiers can be scaled independently (e.g., adding more application server nodes during compute spikes without paying for unneeded database nodes).
+* **Enhanced Security & Maintenance:** Each tier can be protected by dedicated network segmentation (DMZ, private subnets), and individual components can be updated, rebooted, or patched without bringing down unrelated services.
