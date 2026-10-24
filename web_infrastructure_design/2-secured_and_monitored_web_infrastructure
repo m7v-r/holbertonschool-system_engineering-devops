@@ -1,0 +1,60 @@
+# Secured and Monitored Web Infrastructure
+
+## Diagram
+![Secured and Monitored Web Infrastructure Diagram](YOUR_IMGUR_URL_HERE)
+
+## Description
+This infrastructure builds upon the distributed setup by securing incoming traffic using HTTPS/SSL, protecting individual servers with firewalls, and implementing end-to-end performance and health monitoring using monitoring agents on each server.
+
+---
+
+## Specifics
+
+### Why Every Additional Element is Added:
+* **3 Firewalls (one per server):**  
+  Added to restrict inbound and outbound network traffic based on predetermined security rules. They isolate backend systems, closing off unused ports and protecting against unauthorized access.
+* **1 SSL Certificate (HTTPS):**  
+  Added to encrypt traffic between client web browsers and the infrastructure, preventing eavesdropping, data tampering, and man-in-the-middle attacks.
+* **3 Monitoring Clients (Sumo Logic / Datadog / Prometheus agents):**  
+  Added to each server to track health, gather system metrics (CPU, RAM, disk, I/O), inspect logs, and alert system administrators before or immediately when an incident occurs.
+
+### What Firewalls Are For:
+A firewall is a network security system that monitors and controls incoming and outgoing network traffic according to predefined security rules. It acts as a barrier, permitting only legitimate traffic (e.g., port 443/80 on the load balancer, internal network ports between servers) while dropping malicious connection requests or unauthorized port probes.
+
+### Why the Traffic is Served over HTTPS:
+* **Confidentiality:** Encrypts user credentials, cookies, and sensitive personal information during transit.
+* **Integrity:** Ensures data cannot be intercepted or modified in transit by third parties (preventing Man-in-the-Middle attacks).
+* **Trust & Identity:** The SSL certificate validates the server's identity through a trusted Certificate Authority (CA).
+
+### What Monitoring is Used For:
+Monitoring tracks operational performance and health. It provides:
+* Visibility into system performance and capacity planning (knowing when to scale).
+* Real-time alerting for server outages, high resource usage, or service crashes.
+* Centralized access logging and error debugging to identify bugs and security incidents quickly.
+
+### How the Monitoring Tool Collects Data:
+Monitoring agents (such as Sumo Logic collector, Datadog agent, or Node Exporter) run as background daemon services on each host. They collect data using two methods:
+1. **Push Mechanism:** The local agent reads system files (e.g., `/proc`), inspects OS metrics, tails application log files (`/var/log/nginx/access.log`), and pushes these batched metrics securely to a centralized server or cloud endpoint.
+2. **Pull Mechanism:** A centralized monitoring server periodically queries (scrapes) metrics endpoints exposed by each host agent.
+
+### How to Monitor Web Server QPS (Queries Per Second):
+To track QPS:
+1. Configure Nginx access logging to write every inbound HTTP request to `/var/log/nginx/access.log` (or enable the `ngx_http_stub_status_module` for real-time status counters).
+2. Configure the monitoring client to ingest and parse Nginx access logs or scrape the status module.
+3. Calculate the number of request entries recorded within a 1-second moving window (`Total Requests in timeframe / seconds in timeframe`) and visualize the metric on a dashboard.
+
+---
+
+## Infrastructure Issues
+
+* **Why Terminating SSL at the Load Balancer Level is an Issue:**  
+  When SSL is terminated at the load balancer, traffic from the client to HAProxy is encrypted, but traffic between HAProxy and the backend web servers travels unencrypted as plain HTTP over the internal network. If the private subnet is intercepted or compromised by an internal attacker, cleartext data can be sniffed.
+* **Why Having Only One MySQL Server Capable of Accepting Writes is an Issue:**  
+  The Primary database remains a single point of failure for write operations. If the Primary MySQL server crashes:
+  * The application can no longer write, create, or update user records.
+  * A failover must take place (either manually or via an automated orchestrator) to promote a Replica to Primary, which causes write downtime during transition.
+* **Why Having Servers with All the Same Components Might Be a Problem:**  
+  Running the web server, application server, and MySQL database on the same machine creates resource contention:
+  * A spike in web traffic can exhaust CPU and RAM, starving the database of memory and slowing down the whole host.
+  * The components cannot be scaled independently (e.g., scaling database memory independently of web server CPU).
+  * Upgrading or patching one component risks impacting all other services running on that shared system.
