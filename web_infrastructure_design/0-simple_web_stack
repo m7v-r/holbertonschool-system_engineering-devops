@@ -1,6 +1,9 @@
 # Simple Web Stack
 
-![Simple Web Stack Diagram](https://i.imgur.com/yYqCy5R.png)
+## Diagram
+![Simple Web Stack Diagram](https://i.imgur.com/XIWpRRm.png)
+
+*Direct Link:* [View Diagram on Imgur](https://imgur.com/XIWpRRm)
 
 ## Description
 This infrastructure hosts a personal website reachable via `www.foobar.com` on a single server running a LAMP-like stack.
